@@ -2,6 +2,7 @@ package com.example.myapplication;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.os.Bundle;
@@ -27,7 +28,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView textViewResult;
     String url = "https://reqres.in/api/users?page=2";
     private MainViewModel viewModel;
-    Handler handler = new Handler(Looper.getMainLooper());
 
 
     @Override
@@ -36,21 +36,17 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         textViewResult = findViewById(R.id.textView_result);
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
-        new Thread(new Runnable() {
+        try {
+            viewModel.refresh(url);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        viewModel.getMessage().observe(this, new Observer<String>() {
             @Override
-            public void run() {
-                try {
-                    String str = viewModel.run(url);
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            textViewResult.setText(str);
-                        }
-                    });
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            public void onChanged(String s) {
+                textViewResult.setText(s);
             }
-        }).start();
+        });
+
     }
 }
